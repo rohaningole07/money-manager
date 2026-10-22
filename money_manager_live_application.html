@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Manager Pro - Live Financial Dashboard</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Modern Responsive Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.7);
+    }
+
+    /* Light Mode Custom Styling */
+    html:not(.dark) body {
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    html:not(.dark) .theme-card {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    html:not(.dark) .theme-input {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+    }
+    html:not(.dark) .theme-input:focus {
+      background-color: #ffffff;
+      border-color: #3b82f6;
+    }
+
+    /* Dark Mode Custom Styling */
+    html.dark body {
+      background-color: #090d16;
+      color: #f8fafc;
+    }
+
+    html.dark .theme-card {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    html.dark .theme-input {
+      background-color: #030712;
+      border: 1px solid #374151;
+      color: #f8fafc;
+    }
+    html.dark .theme-input:focus {
+      border-color: #60a5fa;
+    }
+
+    /* Tab active indicator styling */
+    .nav-tab.active {
+      background-color: #2563eb !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- ==================== HEADER / TOP NAVIGATION ==================== -->
+  <header class="theme-card sticky top-0 z-40 border-b shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Live Clock -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+            <i class="fa-solid fa-wallet text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              Money Manager Pro
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">LIVE</span>
+            </h1>
+            <p id="liveClock" class="text-xs font-mono text-slate-500 dark:text-slate-400">Loading clock...</p>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Action Buttons -->
+        <div class="flex sm:hidden items-center gap-2">
+          <button onclick="toggleTheme()" class="p-2 rounded-lg border theme-input text-amber-500" title="Toggle Theme">
+            <i class="fa-solid fa-sun dark:hidden"></i>
+            <i class="fa-solid fa-moon hidden dark:block text-indigo-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons Bar -->
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+        <button onclick="openExpenseModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Add Expense</span>
+        </button>
+
+        <button onclick="testNotificationAlert()" class="px-3 py-2 rounded-xl text-xs font-semibold theme-input hover:bg-slate-200 dark:hover:bg-slate-800 transition flex items-center gap-1.5" title="Test 10 PM Notification">
+          <i class="fa-solid fa-bell text-amber-500"></i>
+          <span class="hidden sm:inline">10 PM Alert</span>
+        </button>
+
+        <button onclick="exportCSV()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-csv"></i>
+          <span class="hidden sm:inline">Export</span>
+        </button>
+
+        <button onclick="toggleTheme()" class="hidden sm:flex p-2.5 rounded-xl border theme-input hover:bg-slate-200 dark:hover:bg-slate-800 transition" title="Toggle Light/Dark Theme">
+          <i class="fa-solid fa-sun text-amber-500 dark:hidden"></i>
+          <i class="fa-solid fa-moon hidden dark:block text-indigo-400"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-800/80">
+      <nav class="flex space-x-1 sm:space-x-2 py-2 overflow-x-auto" aria-label="Tabs">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="switchTab('expenses')" id="tab-btn-expenses" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Daily Expenses</span>
+        </button>
+        <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Analytics & Trends</span>
+        </button>
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Settings & Budget</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINERS ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- TOP OVERVIEW CARDS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Daily Budget Target -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-calendar-day text-emerald-500 mr-1.5"></i> Today's Target
+            </span>
+            <span id="badgeTargetType" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+              Re-amortized
+            </span>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <div>
+              <div id="dashDailyTarget" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">₹0</div>
+              <div id="dashBaseTarget" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Base: ₹0/day</div>
+            </div>
+            <div>
+              <span id="dashRemainingBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                ₹0 Left
+              </span>
+            </div>
+          </div>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex justify-between text-xs font-medium">
+              <span class="text-slate-500 dark:text-slate-400">Spent Today: <strong id="dashTodaySpent" class="text-slate-900 dark:text-white">₹0</strong></span>
+              <span id="dashTodayPct" class="text-emerald-500 font-mono font-bold">0%</span>
+            </div>
+            <div class="w-full h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+              <div id="dashProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discretionary Month Pool -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-coins text-amber-500 mr-1.5"></i> Discretionary Pool
+            </span>
+            <span id="dashDaysLeft" class="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">-- days left</span>
+          </div>
+          <div class="mt-3">
+            <div id="dashDiscRemaining" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">₹0</div>
+            <p id="dashDiscTotal" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Remaining out of ₹0</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+            <span class="text-slate-500 dark:text-slate-400">Spent Month-to-Date:</span>
+            <span id="dashMonthSpent" class="font-bold text-rose-500 font-mono">₹0</span>
+          </div>
+        </div>
+
+        <!-- Income & Fixed Costs Summary -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-building-columns text-blue-500 mr-1.5"></i> Salary & Savings
+            </span>
+            <button onclick="switchTab('settings')" class="text-xs text-blue-500 hover:underline font-semibold">Edit</button>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2 rounded-xl theme-input">
+              <div class="text-slate-500 dark:text-slate-400">Net Salary</div>
+              <div id="dashSalary" class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-0.5">₹0</div>
+            </div>
+            <div class="p-2 rounded-xl theme-input">
+              <div class="text-slate-500 dark:text-slate-400">Fixed Costs</div>
+              <div id="dashFixed" class="text-sm font-bold font-mono text-amber-500 mt-0.5">₹0</div>
+            </div>
+          </div>
+          <div class="mt-2.5 p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 flex justify-between items-center text-xs">
+            <span class="text-blue-600 dark:text-blue-400 font-medium">Target Savings:</span>
+            <span id="dashSavings" class="font-bold text-blue-600 dark:text-blue-400 font-mono">₹0</span>
+          </div>
+        </div>
+
+        <!-- Payment Modes Today -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-credit-card text-indigo-500 mr-1.5"></i> Payment Mix Today
+              </span>
+              <span id="dashMixTotal" class="text-xs font-mono font-bold text-slate-900 dark:text-white">₹0</span>
+            </div>
+            <div class="mt-3 space-y-1.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-bolt text-indigo-500 text-[10px]"></i> UPI</span>
+                <span id="mixUpi" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-money-bill-wave text-emerald-500 text-[10px]"></i> Cash</span>
+                <span id="mixCash" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-credit-card text-purple-500 text-[10px]"></i> Card</span>
+                <span id="mixCard" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+            </div>
+          </div>
+          <div id="mixDominantTag" class="mt-3 text-[11px] text-center p-1.5 rounded-xl theme-input text-slate-500 dark:text-slate-400">
+            ⚡ UPI dominant today
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DASHBOARD MAIN CONTENT: QUICK ADD & RECENT TRANSACTIONS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: QUICK ADD & SMS SIMULATOR -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- Quick-Add Presets -->
+          <div class="theme-card p-5 rounded-2xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt text-amber-500"></i>
+              Quick-Add Presets
+            </h3>
+            <div class="grid grid-cols-3 gap-2.5">
+              <button onclick="quickAdd('Coffee / Tea', 20, 'Food', 'UPI')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">☕ Coffee/Tea</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹20</div>
+              </button>
+              <button onclick="quickAdd('Lunch / Meal', 120, 'Food', 'UPI')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">🍱 Lunch</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹120</div>
+              </button>
+              <button onclick="quickAdd('Cab / Auto', 80, 'Transport', 'Cash')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">🛺 Cab/Auto</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹80</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bank SMS Auto Parser -->
+          <div class="theme-card p-5 rounded-2xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-robot text-indigo-500"></i>
+                UPI Bank SMS Auto-Parser
+              </span>
+              <span class="text-[10px] bg-indigo-500/10 text-indigo-500 border border-indigo-500/30 px-2 py-0.5 rounded font-mono">Parser</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Paste standard bank SMS text below to extract amount & merchant:</p>
+            <div class="space-y-2">
+              <input type="text" id="smsInput" placeholder="e.g. Debited Rs 350.00 via UPI to Swiggy on 22-Oct" class="w-full rounded-xl px-3 py-2 text-xs font-mono theme-input focus:outline-none">
+              <button onclick="parseSmsAndAdd()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Parse SMS & Add Transaction
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: RECENT TRANSACTIONS PREVIEW -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="theme-card p-5 rounded-2xl">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
+                Recent Activity
+              </h3>
+              <button onclick="switchTab('expenses')" class="text-xs font-semibold text-blue-500 hover:underline">View All Expenses →</button>
+            </div>
+
+            <!-- List Preview -->
+            <div id="recentTxList" class="space-y-2.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: DAILY EXPENSES LOG ==================== -->
+    <section id="tab-expenses" class="tab-content hidden space-y-4">
+      
+      <!-- Expenses Toolbar -->
+      <div class="theme-card p-4 rounded-2xl space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-blue-500"></i>
+            Daily Expense Ledger
+          </h3>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Mode Filters -->
+            <div class="flex items-center gap-1 p-1 rounded-xl theme-input text-xs">
+              <button onclick="setFilterMode('ALL')" id="filter-all" class="px-2.5 py-1 rounded-lg font-semibold bg-blue-600 text-white">ALL</button>
+              <button onclick="setFilterMode('UPI')" id="filter-upi" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">UPI</button>
+              <button onclick="setFilterMode('Cash')" id="filter-cash" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Cash</button>
+              <button onclick="setFilterMode('Card')" id="filter-card" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Card</button>
+            </div>
+
+            <button onclick="openExpenseModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> New
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="searchQuery" oninput="renderApp()" placeholder="Search description, category, or note..." class="w-full rounded-xl pl-9 pr-3 py-2 text-xs theme-input focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Expense Ledger Table / Cards -->
+      <div id="fullTxList" class="space-y-2.5">
+        <!-- Dynamically populated -->
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: ANALYTICS & TRENDS ==================== -->
+    <section id="tab-analytics" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Category Chart -->
+        <div class="theme-card p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-indigo-500"></i>
+            Expense Breakdown by Category
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Payment Method Chart -->
+        <div class="theme-card p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-column text-emerald-500"></i>
+            Spend Breakdown by Payment Mode
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="modeChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: SETTINGS & BUDGET ==================== -->
+    <section id="tab-settings" class="tab-content hidden space-y-6 max-w-3xl mx-auto">
+      
+      <div class="theme-card p-6 rounded-2xl space-y-6">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+          <i class="fa-solid fa-sliders text-blue-500"></i>
+          Budget Settings & Salary Parameters
+        </h3>
+
+        <form id="settingsForm" onsubmit="handleSettingsSave(event)" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Monthly Net Salary / Income (₹) *</label>
+            <input type="number" id="cfgSalary" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Fixed Costs (Rent, EMI, Bills) (₹) *</label>
+              <input type="number" id="cfgFixed" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Savings Target (₹) *</label>
+              <input type="number" id="cfgSavings" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cfgRollover" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+              <span class="font-medium text-slate-700 dark:text-slate-300">Enable Daily Budget Dynamic Re-amortization (Rollover unspent or overspent amounts across remaining month days)</span>
+            </label>
+          </div>
+
+          <div class="pt-4 flex items-center gap-3">
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition text-xs">
+              Save Settings & Recalculate
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Data Reset Card -->
+      <div class="theme-card p-6 rounded-2xl border-rose-500/30">
+        <h4 class="text-sm font-bold text-rose-500 flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+        </h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Reset all local storage transaction data back to initial sample values.</p>
+        <button onclick="resetData()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-arrow-up"></i> Reset All Data
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== ADD EXPENSE MODAL ==================== -->
+  <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="theme-card rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-4 border">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-blue-500"></i> Record Expense
+        </h3>
+        <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="modalTxForm" onsubmit="handleModalFormSubmit(event)" class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Amount (₹) *</label>
+            <input type="number" id="modalTxAmount" required min="1" placeholder="e.g. 250" class="w-full rounded-xl px-3 py-2 text-sm font-mono theme-input focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Title / Item *</label>
+            <input type="text" id="modalTxTitle" required placeholder="e.g. Dinner" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Payment Mode</label>
+            <select id="modalTxMode" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+              <option value="UPI">⚡ UPI</option>
+              <option value="Cash">💵 Cash</option>
+              <option value="Card">💳 Card</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+            <select id="modalTxCategory" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+              <option value="Food">Food & Dining</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Bills">Bills & Utilities</option>
+              <option value="Health">Health</option>
+              <option value="Entertainment">Entertainment</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Note / Merchant (Optional)</label>
+          <input type="text" id="modalTxNote" placeholder="e.g. Swiggy / Uber" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeExpenseModal()" class="px-4 py-2 rounded-xl border theme-input font-semibold text-slate-600 dark:text-slate-400">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 10 PM NOTIFICATION SIMULATION MODAL ==================== -->
+  <div id="notifModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="theme-card rounded-2xl w-full max-w-sm p-5 shadow-2xl relative space-y-4 border border-indigo-500/40">
+      <div class="flex items-center justify-between text-xs text-indigo-500 bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/20">
+        <span class="flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-bell"></i>
+          10:00 PM Daily Budget Alert
+        </span>
+        <button onclick="closeNotifModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="text-center py-2 space-y-1">
+        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">Today's Expenditure</div>
+        <div id="notifSpent" class="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">₹0</div>
+        <div id="notifMsg" class="text-xs font-bold text-emerald-500 mt-1">🎉 You stayed within budget today!</div>
+      </div>
+
+      <div class="space-y-2 p-3.5 rounded-xl theme-input text-xs">
+        <div class="flex justify-between text-slate-500 dark:text-slate-400">
+          <span>Daily Target:</span>
+          <span id="notifTarget" class="font-mono text-slate-900 dark:text-white font-bold">₹0</span>
+        </div>
+        <div class="flex justify-between text-slate-500 dark:text-slate-400">
+          <span>Tomorrow's New Target:</span>
+          <span id="notifNextTarget" class="font-mono text-blue-500 font-bold">₹0</span>
+        </div>
+      </div>
+
+      <button onclick="closeNotifModal()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md">
+        Close Notification
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // --- APP STATE & LOCALSTORAGE ---
+    const DEFAULT_CONFIG = {
+      monthlySalary: 85000,
+      fixedExpenses: 32000,
+      savingsTarget: 15000,
+      autoRollover: true
+    };
+
+    let config = JSON.parse(localStorage.getItem('mmp_config')) || DEFAULT_CONFIG;
+    let transactions = JSON.parse(localStorage.getItem('mmp_txs')) || [
+      { id: 'tx-1', title: 'Morning Coffee & Snack', amount: 80, category: 'Food', mode: 'UPI', date: getTodayFormattedDate(), time: '08:30 AM', note: 'Cafe' },
+      { id: 'tx-2', title: 'Cab to Office', amount: 150, category: 'Transport', mode: 'Cash', date: getTodayFormattedDate(), time: '09:15 AM', note: 'Commute' }
+    ];
+
+    let filterMode = 'ALL';
+    let categoryChartInstance = null;
+    let modeChartInstance = null;
+
+    // --- HELPER FUNCTIONS ---
+    function getTodayFormattedDate() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    // Explicit Tab Switcher
+    window.switchTab = function(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      const targetBtn = document.getElementById(`tab-btn-${tabName}`);
+
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      if (tabName === 'analytics') {
+        renderCharts();
+      }
+    };
+
+    // Theme Switcher
+    window.toggleTheme = function() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('mmp_theme', isDark ? 'dark' : 'light');
+    };
+
+    // Live Clock Ticker
+    function initClock() {
+      const savedTheme = localStorage.getItem('mmp_theme');
+      if (savedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
+
+      setInterval(() => {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString();
+        document.getElementById('liveClock').textContent = `${dateStr} | ${timeStr}`;
+      }, 1000);
+    }
+
+    // --- MAIN RENDER ENGINE ---
+    window.renderApp = function() {
+      const now = new Date();
+      const todayStr = getTodayFormattedDate();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const currentDayNumber = now.getDate();
+      const remainingDaysInMonth = Math.max(1, totalDaysInMonth - currentDayNumber + 1);
+
+      document.getElementById('dashDaysLeft').textContent = `${remainingDaysInMonth} days left`;
+
+      // Budget Calculations
+      const discretionaryPool = Math.max(0, config.monthlySalary - config.fixedExpenses - config.savingsTarget);
+      const baseDailyAllowance = Math.round(discretionaryPool / totalDaysInMonth);
+
+      // Month-to-date spent
+      const monthExpenses = transactions
+        .filter(t => {
+          const d = new Date(t.date);
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      // Past spent before today
+      const pastExpensesInMonth = transactions
+        .filter(t => {
+          const d = new Date(t.date);
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear && t.date < todayStr;
+        })
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      const remainingDiscretionaryPool = discretionaryPool - pastExpensesInMonth;
+      const reAmortizedTarget = Math.max(0, Math.round(remainingDiscretionaryPool / remainingDaysInMonth));
+      const activeDailyTarget = config.autoRollover ? reAmortizedTarget : baseDailyAllowance;
+
+      // Today's spent
+      const todayTxs = transactions.filter(t => t.date === todayStr);
+      const todaySpent = todayTxs.reduce((sum, t) => sum + Number(t.amount), 0);
+      const todayRemaining = activeDailyTarget - todaySpent;
+      const todaySpentPct = Math.min(100, Math.round((todaySpent / (activeDailyTarget || 1)) * 100));
+
+      // Payment Breakdown
+      const upiSpent = todayTxs.filter(t => t.mode === 'UPI').reduce((s, t) => s + Number(t.amount), 0);
+      const cashSpent = todayTxs.filter(t => t.mode === 'Cash').reduce((s, t) => s + Number(t.amount), 0);
+      const cardSpent = todayTxs.filter(t => t.mode === 'Card').reduce((s, t) => s + Number(t.amount), 0);
+
+      // Render Dashboard Cards
+      document.getElementById('dashDailyTarget').textContent = `₹${activeDailyTarget.toLocaleString()}`;
+      document.getElementById('dashBaseTarget').textContent = `Base: ₹${baseDailyAllowance}/day`;
+      document.getElementById('dashTodaySpent').textContent = `₹${todaySpent}`;
+      document.getElementById('dashTodayPct').textContent = `${todaySpentPct}%`;
+      document.getElementById('dashProgressBar').style.width = `${todaySpentPct}%`;
+
+      const remBadge = document.getElementById('dashRemainingBadge');
+      if (todayRemaining >= 0) {
+        remBadge.textContent = `₹${todayRemaining} Left`;
+        remBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20';
+      } else {
+        remBadge.textContent = `₹${Math.abs(todayRemaining)} Over`;
+        remBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20';
+      }
+
+      document.getElementById('dashDiscRemaining').textContent = `₹${(discretionaryPool - monthExpenses).toLocaleString()}`;
+      document.getElementById('dashDiscTotal').textContent = `Remaining out of ₹${discretionaryPool.toLocaleString()}`;
+      document.getElementById('dashMonthSpent').textContent = `₹${monthExpenses.toLocaleString()}`;
+
+      document.getElementById('dashSalary').textContent = `₹${config.monthlySalary.toLocaleString()}`;
+      document.getElementById('dashFixed').textContent = `₹${config.fixedExpenses.toLocaleString()}`;
+      document.getElementById('dashSavings').textContent = `₹${config.savingsTarget.toLocaleString()}`;
+
+      document.getElementById('dashMixTotal').textContent = `₹${todaySpent}`;
+      document.getElementById('mixUpi').textContent = `₹${upiSpent}`;
+      document.getElementById('mixCash').textContent = `₹${cashSpent}`;
+      document.getElementById('mixCard').textContent = `₹${cardSpent}`;
+
+      // Populate Transactions
+      renderRecentTransactions();
+      renderFullExpenseList();
+
+      // Save LocalStorage
+      localStorage.setItem('mmp_config', JSON.stringify(config));
+      localStorage.setItem('mmp_txs', JSON.stringify(transactions));
+    };
+
+    function renderRecentTransactions() {
+      const container = document.getElementById('recentTxList');
+      const recent = transactions.slice(0, 5);
+
+      if (recent.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No recent transactions recorded.</div>`;
+        return;
+      }
+
+      container.innerHTML = recent.map(t => `
+        <div class="p-3 rounded-xl theme-input flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+              <i class="fa-solid ${getCategoryFaIcon(t.category)} text-xs"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                ${t.title}
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-semibold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">${t.mode}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${t.date} • ${t.time || ''}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-bold font-mono text-slate-900 dark:text-white">-₹${t.amount}</div>
+            <div class="text-[10px] text-slate-400">${t.category}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderFullExpenseList() {
+      const container = document.getElementById('fullTxList');
+      const query = (document.getElementById('searchQuery')?.value || '').toLowerCase();
+
+      const filtered = transactions.filter(t => {
+        const matchesMode = filterMode === 'ALL' || t.mode === filterMode;
+        const matchesQuery = t.title.toLowerCase().includes(query) || t.category.toLowerCase().includes(query) || (t.note && t.note.toLowerCase().includes(query));
+        return matchesMode && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center rounded-2xl theme-card text-xs text-slate-400">No matching transactions found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => `
+        <div class="p-3.5 rounded-xl theme-card flex items-center justify-between transition hover:border-blue-500/50">
+          <div class="flex items-center space-x-3">
+            <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+              <i class="fa-solid ${getCategoryFaIcon(t.category)} text-sm"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                ${t.title}
+                <span class="text-[10px] px-2 py-0.2 rounded font-mono font-semibold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">${t.mode}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+                <span>${t.date}</span>
+                <span>•</span>
+                <span>${t.time || ''}</span>
+                ${t.note ? `<span>•</span><span class="italic text-slate-400">${t.note}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <div class="text-xs font-bold font-mono text-slate-900 dark:text-white">-₹${t.amount}</div>
+              <div class="text-[10px] text-slate-400">${t.category}</div>
+            </div>
+            <button onclick="deleteTx('${t.id}')" class="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg transition" title="Delete Transaction">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getCategoryFaIcon(cat) {
+      switch(cat) {
+        case 'Food': return 'fa-utensils';
+        case 'Transport': return 'fa-car';
+        case 'Shopping': return 'fa-bag-shopping';
+        case 'Bills': return 'fa-file-invoice-dollar';
+        case 'Health': return 'fa-heart-pulse';
+        default: return 'fa-mug-hot';
+      }
+    }
+
+    // --- QUICK ADD & ACTION HANDLERS ---
+    window.quickAdd = function(title, amount, category, mode) {
+      const newTx = {
+        id: 'tx-' + Date.now(),
+        title,
+        amount: Number(amount),
+        category,
+        mode,
+        date: getTodayFormattedDate(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        note: 'Quick-add preset'
+      };
+      transactions.unshift(newTx);
+      renderApp();
+    };
+
+    window.parseSmsAndAdd = function() {
+      const input = document.getElementById('smsInput');
+      const sms = input.value;
+      if (!sms) return;
+
+      const amtMatch = sms.match(/(?:Rs|INR|₹)\s*([\d,]+(?:\.\d+)?)/i);
+      const merchantMatch = sms.match(/(?:to|at|vpa)\s+([A-Za-z0-9\s]+?)(?=\s+on|\s+via|\s+ref|\.|$)/i);
+
+      const amount = amtMatch ? parseFloat(amtMatch[1].replace(',', '')) : 100;
+      const merchant = merchantMatch ? merchantMatch[1].trim() : 'Merchant';
+
+      transactions.unshift({
+        id: 'tx-' + Date.now(),
+        title: `UPI - ${merchant}`,
+        amount,
+        category: 'Shopping',
+        mode: 'UPI',
+        date: getTodayFormattedDate(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        note: 'Parsed from SMS'
+      });
+
+      input.value = '';
+      renderApp();
+    };
+
+    window.deleteTx = function(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      renderApp();
+    };
+
+    window.setFilterMode = function(mode) {
+      filterMode = mode;
+      ['all', 'upi', 'cash', 'card'].forEach(m => {
+        const btn = document.getElementById(`filter-${m}`);
+        if (btn) {
+          if (m.toUpperCase() === mode) {
+            btn.className = 'px-2.5 py-1 rounded-lg font-semibold bg-blue-600 text-white';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+          }
+        }
+      });
+      renderFullExpenseList();
+    };
+
+    // Modal Operations
+    window.openExpenseModal = function() {
+      document.getElementById('expenseModal').classList.remove('hidden');
+      document.getElementById('expenseModal').classList.add('flex');
+    };
+
+    window.closeExpenseModal = function() {
+      document.getElementById('expenseModal').classList.add('hidden');
+      document.getElementById('expenseModal').classList.remove('flex');
+    };
+
+    window.handleModalFormSubmit = function(e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('modalTxAmount').value);
+      const title = document.getElementById('modalTxTitle').value;
+      const mode = document.getElementById('modalTxMode').value;
+      const category = document.getElementById('modalTxCategory').value;
+      const note = document.getElementById('modalTxNote').value;
+
+      if (!amount || !title) return;
+
+      transactions.unshift({
+        id: 'tx-' + Date.now(),
+        title,
+        amount,
+        category,
+        mode,
+        date: getTodayFormattedDate(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        note
+      });
+
+      document.getElementById('modalTxForm').reset();
+      closeExpenseModal();
+      renderApp();
+    };
+
+    // Settings Operations
+    window.handleSettingsSave = function(e) {
+      e.preventDefault();
+      config.monthlySalary = Number(document.getElementById('cfgSalary').value);
+      config.fixedExpenses = Number(document.getElementById('cfgFixed').value);
+      config.savingsTarget = Number(document.getElementById('cfgSavings').value);
+      config.autoRollover = document.getElementById('cfgRollover').checked;
+      renderApp();
+      alert('Settings saved successfully!');
+    };
+
+    function populateSettingsForm() {
+      document.getElementById('cfgSalary').value = config.monthlySalary;
+      document.getElementById('cfgFixed').value = config.fixedExpenses;
+      document.getElementById('cfgSavings').value = config.savingsTarget;
+      document.getElementById('cfgRollover').checked = config.autoRollover;
+    }
+
+    // Notification Trigger
+    window.testNotificationAlert = function() {
+      const todayTxs = transactions.filter(t => t.date === getTodayFormattedDate());
+      const todaySpent = todayTxs.reduce((sum, t) => sum + Number(t.amount), 0);
+      const discretionaryPool = Math.max(0, config.monthlySalary - config.fixedExpenses - config.savingsTarget);
+      const activeTarget = Math.round(discretionaryPool / 30);
+
+      document.getElementById('notifSpent').textContent = `₹${todaySpent}`;
+      document.getElementById('notifTarget').textContent = `₹${activeTarget}`;
+      document.getElementById('notifNextTarget').textContent = `₹${activeTarget}`;
+
+      const msg = document.getElementById('notifMsg');
+      if (todaySpent <= activeTarget) {
+        msg.textContent = `🎉 You saved ₹${activeTarget - todaySpent} today!`;
+        msg.className = 'text-xs font-bold text-emerald-500 mt-1';
+      } else {
+        msg.textContent = `⚠️ Overspent by ₹${todaySpent - activeTarget} today.`;
+        msg.className = 'text-xs font-bold text-rose-500 mt-1';
+      }
+
+      document.getElementById('notifModal').classList.remove('hidden');
+      document.getElementById('notifModal').classList.add('flex');
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('10 PM Expense Summary', {
+          body: `Spent Today: ₹${todaySpent} | Daily Target: ₹${activeTarget}`
+        });
+      } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    };
+
+    window.closeNotifModal = function() {
+      document.getElementById('notifModal').classList.add('hidden');
+      document.getElementById('notifModal').classList.remove('flex');
+    };
+
+    // CSV Export
+    window.exportCSV = function() {
+      let csv = 'ID,Date,Time,Title,Amount,Category,Mode,Note\n';
+      transactions.forEach(t => {
+        csv += `"${t.id}","${t.date}","${t.time || ''}","${t.title}",${t.amount},"${t.category}","${t.mode}","${t.note || ''}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Expenses_${getTodayFormattedDate()}.csv`);
+      a.click();
+    };
+
+    // Reset Data
+    window.resetData = function() {
+      if (confirm('Reset all transaction data and settings back to defaults?')) {
+        localStorage.clear();
+        config = DEFAULT_CONFIG;
+        transactions = [
+          { id: 'tx-1', title: 'Morning Coffee & Snack', amount: 80, category: 'Food', mode: 'UPI', date: getTodayFormattedDate(), time: '08:30 AM', note: 'Cafe' }
+        ];
+        populateSettingsForm();
+        renderApp();
+      }
+    };
+
+    // --- CHART.JS ANALYTICS ---
+    function renderCharts() {
+      // Category Breakdown
+      const categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Health', 'Entertainment'];
+      const categoryData = categories.map(cat => 
+        transactions.filter(t => t.category === cat).reduce((s, t) => s + Number(t.amount), 0)
+      );
+
+      const ctxCat = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartInstance) categoryChartInstance.destroy();
+      categoryChartInstance = new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: categories,
+          datasets: [{
+            data: categoryData,
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      // Payment Mode Breakdown
+      const modes = ['UPI', 'Cash', 'Card'];
+      const modeData = modes.map(m => 
+        transactions.filter(t => t.mode === m).reduce((s, t) => s + Number(t.amount), 0)
+      );
+
+      const ctxMode = document.getElementById('modeChart').getContext('2d');
+      if (modeChartInstance) modeChartInstance.destroy();
+      modeChartInstance = new Chart(ctxMode, {
+        type: 'bar',
+        data: {
+          labels: modes,
+          datasets: [{
+            label: 'Total Spent (₹)',
+            data: modeData,
+            backgroundColor: ['#6366f1', '#10b981', '#a855f7']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // --- INITIALIZATION ON LOAD ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initClock();
+      populateSettingsForm();
+      renderApp();
+    });
+  </script>
+</body>
+</html>
