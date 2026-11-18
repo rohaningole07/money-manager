@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Manager Pro - Live Financial Dashboard</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen pb-12 antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- ==================== HEADER / TOP NAVIGATION ==================== -->
+  <header class="theme-card sticky top-0 z-40 border-b shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      
+      <!-- Brand Logo & Live Clock -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+            <i class="fa-solid fa-wallet text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              Money Manager Pro
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">LIVE</span>
+            </h1>
+            <p id="liveClock" class="text-xs font-mono text-slate-500 dark:text-slate-400">Loading clock...</p>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Action Buttons -->
+        <div class="flex sm:hidden items-center gap-2">
+          <button onclick="toggleTheme()" class="p-2 rounded-lg border theme-input text-amber-500" title="Toggle Theme">
+            <i class="fa-solid fa-sun dark:hidden"></i>
+            <i class="fa-solid fa-moon hidden dark:block text-indigo-400"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons Bar -->
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+        <button onclick="openExpenseModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Add Expense</span>
+        </button>
+
+        <button onclick="testNotificationAlert()" class="px-3 py-2 rounded-xl text-xs font-semibold theme-input hover:bg-slate-200 dark:hover:bg-slate-800 transition flex items-center gap-1.5" title="Test 11 PM Notification">
+          <i class="fa-solid fa-bell text-amber-500"></i>
+          <span class="hidden sm:inline">11 PM Alert</span>
+        </button>
+
+        <button onclick="exportCSV()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-csv"></i>
+          <span class="hidden sm:inline">Export</span>
+        </button>
+
+        <button onclick="toggleTheme()" class="hidden sm:flex p-2.5 rounded-xl border theme-input hover:bg-slate-200 dark:hover:bg-slate-800 transition" title="Toggle Light/Dark Theme">
+          <i class="fa-solid fa-sun text-amber-500 dark:hidden"></i>
+          <i class="fa-solid fa-moon hidden dark:block text-indigo-400"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-800/80">
+      <nav class="flex space-x-1 sm:space-x-2 py-2 overflow-x-auto" aria-label="Tabs">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </button>
+        <button onclick="switchTab('expenses')" id="tab-btn-expenses" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Daily Expenses</span>
+        </button>
+        <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Analytics & Trends</span>
+        </button>
+        <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white whitespace-nowrap">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Settings & Budget</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINERS ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- TOP OVERVIEW CARDS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Daily Budget Target -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-calendar-day text-emerald-500 mr-1.5"></i> Today's Target
+            </span>
+            <span id="badgeTargetType" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+              Re-amortized
+            </span>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <div>
+              <div id="dashDailyTarget" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">₹0</div>
+              <div id="dashBaseTarget" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Base: ₹0/day</div>
+            </div>
+            <div>
+              <span id="dashRemainingBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                ₹0 Left
+              </span>
+            </div>
+          </div>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex justify-between text-xs font-medium">
+              <span class="text-slate-500 dark:text-slate-400">Spent Today: <strong id="dashTodaySpent" class="text-slate-900 dark:text-white">₹0</strong></span>
+              <span id="dashTodayPct" class="text-emerald-500 font-mono font-bold">0%</span>
+            </div>
+            <div class="w-full h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800">
+              <div id="dashProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discretionary Month Pool -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-coins text-amber-500 mr-1.5"></i> Discretionary Pool
+            </span>
+            <span id="dashDaysLeft" class="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">-- days left</span>
+          </div>
+          <div class="mt-3">
+            <div id="dashDiscRemaining" class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white">₹0</div>
+            <p id="dashDiscTotal" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Remaining out of ₹0</p>
+          </div>
+          <div class="mt-4 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+            <span class="text-slate-500 dark:text-slate-400">Spent Month-to-Date:</span>
+            <span id="dashMonthSpent" class="font-bold text-rose-500 font-mono">₹0</span>
+          </div>
+        </div>
+
+        <!-- Income & Fixed Costs Summary -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <i class="fa-solid fa-building-columns text-blue-500 mr-1.5"></i> Salary & Savings
+            </span>
+            <button onclick="switchTab('settings')" class="text-xs text-blue-500 hover:underline font-semibold">Edit</button>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2 rounded-xl theme-input">
+              <div class="text-slate-500 dark:text-slate-400">Net Salary</div>
+              <div id="dashSalary" class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-0.5">₹0</div>
+            </div>
+            <div class="p-2 rounded-xl theme-input">
+              <div class="text-slate-500 dark:text-slate-400">Fixed Costs</div>
+              <div id="dashFixed" class="text-sm font-bold font-mono text-amber-500 mt-0.5">₹0</div>
+            </div>
+          </div>
+          <div class="mt-2.5 p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 flex justify-between items-center text-xs">
+            <span class="text-blue-600 dark:text-blue-400 font-medium">Target Savings:</span>
+            <span id="dashSavings" class="font-bold text-blue-600 dark:text-blue-400 font-mono">₹0</span>
+          </div>
+        </div>
+
+        <!-- Payment Modes Today -->
+        <div class="theme-card p-5 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-credit-card text-indigo-500 mr-1.5"></i> Payment Mix Today
+              </span>
+              <span id="dashMixTotal" class="text-xs font-mono font-bold text-slate-900 dark:text-white">₹0</span>
+            </div>
+            <div class="mt-3 space-y-1.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-bolt text-indigo-500 text-[10px]"></i> UPI</span>
+                <span id="mixUpi" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-money-bill-wave text-emerald-500 text-[10px]"></i> Cash</span>
+                <span id="mixCash" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fa-solid fa-credit-card text-purple-500 text-[10px]"></i> Card</span>
+                <span id="mixCard" class="font-mono font-semibold text-slate-900 dark:text-white">₹0</span>
+              </div>
+            </div>
+          </div>
+          <div id="mixDominantTag" class="mt-3 text-[11px] text-center p-1.5 rounded-xl theme-input text-slate-500 dark:text-slate-400">
+            ⚡ UPI dominant today
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DASHBOARD MAIN CONTENT: QUICK ADD & RECENT TRANSACTIONS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: QUICK ADD & SMS SIMULATOR -->
+        <div class="lg:col-span-5 space-y-6">
+
+          <!-- Quick-Add Presets -->
+          <div class="theme-card p-5 rounded-2xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt text-amber-500"></i>
+              Quick-Add Presets
+            </h3>
+            <div class="grid grid-cols-3 gap-2.5">
+              <button onclick="quickAdd('Coffee / Tea', 20, 'Food', 'UPI')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">☕ Coffee/Tea</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹20</div>
+              </button>
+              <button onclick="quickAdd('Lunch / Meal', 120, 'Food', 'UPI')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">🍱 Lunch</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹120</div>
+              </button>
+              <button onclick="quickAdd('Cab / Auto', 80, 'Transport', 'Cash')" class="p-3 rounded-xl theme-input text-left hover:border-blue-500 transition hover:scale-[1.02]">
+                <div class="text-xs text-slate-500 dark:text-slate-400">🛺 Cab/Auto</div>
+                <div class="text-sm font-bold font-mono text-slate-900 dark:text-white mt-1">+₹80</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bank SMS Auto Parser -->
+          <div class="theme-card p-5 rounded-2xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-robot text-indigo-500"></i>
+                UPI Bank SMS Auto-Parser
+              </span>
+              <span class="text-[10px] bg-indigo-500/10 text-indigo-500 border border-indigo-500/30 px-2 py-0.5 rounded font-mono">Parser</span>
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Paste standard bank SMS text below to extract amount & merchant:</p>
+            <div class="space-y-2">
+              <input type="text" id="smsInput" placeholder="e.g. Debited Rs 350.00 via UPI to Swiggy on 22-Oct" class="w-full rounded-xl px-3 py-2 text-xs font-mono theme-input focus:outline-none">
+              <button onclick="parseSmsAndAdd()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Parse SMS & Add Transaction
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: RECENT TRANSACTIONS PREVIEW -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="theme-card p-5 rounded-2xl">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
+                Recent Activity
+              </h3>
+              <button onclick="switchTab('expenses')" class="text-xs font-semibold text-blue-500 hover:underline">View All Expenses →</button>
+            </div>
+
+            <!-- List Preview -->
+            <div id="recentTxList" class="space-y-2.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: DAILY EXPENSES LOG ==================== -->
+    <section id="tab-expenses" class="tab-content hidden space-y-4">
+      
+      <!-- Expenses Toolbar -->
+      <div class="theme-card p-4 rounded-2xl space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-blue-500"></i>
+            Daily Expense Ledger
+          </h3>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Mode Filters -->
+            <div class="flex items-center gap-1 p-1 rounded-xl theme-input text-xs">
+              <button onclick="setFilterMode('ALL')" id="filter-all" class="px-2.5 py-1 rounded-lg font-semibold bg-blue-600 text-white">ALL</button>
+              <button onclick="setFilterMode('UPI')" id="filter-upi" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">UPI</button>
+              <button onclick="setFilterMode('Cash')" id="filter-cash" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Cash</button>
+              <button onclick="setFilterMode('Card')" id="filter-card" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Card</button>
+            </div>
+
+            <button onclick="openExpenseModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> New
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="searchQuery" oninput="renderApp()" placeholder="Search description, category, or note..." class="w-full rounded-xl pl-9 pr-3 py-2 text-xs theme-input focus:outline-none">
+        </div>
+      </div>
+
+      <!-- Expense Ledger Table / Cards -->
+      <div id="fullTxList" class="space-y-2.5">
+        <!-- Dynamically populated -->
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: ANALYTICS & TRENDS ==================== -->
+    <section id="tab-analytics" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Category Chart -->
+        <div class="theme-card p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-indigo-500"></i>
+            Expense Breakdown by Category
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Payment Method Chart -->
+        <div class="theme-card p-5 rounded-2xl">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-column text-emerald-500"></i>
+            Spend Breakdown by Payment Mode
+          </h3>
+          <div class="relative h-64 flex items-center justify-center">
+            <canvas id="modeChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: SETTINGS & BUDGET ==================== -->
+    <section id="tab-settings" class="tab-content hidden space-y-6 max-w-3xl mx-auto">
+      
+      <div class="theme-card p-6 rounded-2xl space-y-6">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+          <i class="fa-solid fa-sliders text-blue-500"></i>
+          Budget Settings & Salary Parameters
+        </h3>
+
+        <form id="settingsForm" onsubmit="handleSettingsSave(event)" class="space-y-4 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Monthly Net Salary / Income (₹) *</label>
+            <input type="number" id="cfgSalary" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Fixed Costs (Rent, EMI, Bills) (₹) *</label>
+              <input type="number" id="cfgFixed" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Savings Target (₹) *</label>
+              <input type="number" id="cfgSavings" required min="0" class="w-full rounded-xl px-3 py-2.5 text-sm font-mono theme-input focus:outline-none">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="cfgRollover" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500">
+              <span class="font-medium text-slate-700 dark:text-slate-300">Enable Daily Budget Dynamic Re-amortization (Rollover unspent or overspent amounts across remaining month days)</span>
+            </label>
+          </div>
+
+          <div class="pt-4 flex items-center gap-3">
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition text-xs">
+              Save Settings & Recalculate
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Data Reset Card -->
+      <div class="theme-card p-6 rounded-2xl border-rose-500/30">
+        <h4 class="text-sm font-bold text-rose-500 flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+        </h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Reset all local storage transaction data back to initial sample values.</p>
+        <button onclick="resetData()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl transition text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-arrow-up"></i> Reset All Data
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== ADD EXPENSE MODAL ==================== -->
+  <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="theme-card rounded-2xl w-full max-w-md p-6 shadow-2xl relative space-y-4 border">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-blue-500"></i> Record Expense
+        </h3>
+        <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="modalTxForm" onsubmit="handleModalFormSubmit(event)" class="space-y-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Amount (₹) *</label>
+            <input type="number" id="modalTxAmount" required min="1" placeholder="e.g. 250" class="w-full rounded-xl px-3 py-2 text-sm font-mono theme-input focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Title / Item *</label>
+            <input type="text" id="modalTxTitle" required placeholder="e.g. Dinner" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Payment Mode</label>
+            <select id="modalTxMode" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+              <option value="UPI">⚡ UPI</option>
+              <option value="Cash">💵 Cash</option>
+              <option value="Card">💳 Card</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Category</label>
+            <select id="modalTxCategory" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+              <option value="Food">Food & Dining</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Bills">Bills & Utilities</option>
+              <option value="Health">Health</option>
+              <option value="Entertainment">Entertainment</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Note / Merchant (Optional)</label>
+          <input type="text" id="modalTxNote" placeholder="e.g. Swiggy / Uber" class="w-full rounded-xl px-3 py-2 text-sm theme-input focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeExpenseModal()" class="px-4 py-2 rounded-xl border theme-input font-semibold text-slate-600 dark:text-slate-400">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md">Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 11 PM NOTIFICATION SIMULATION MODAL ==================== -->
+  <div id="notifModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="theme-card rounded-2xl w-full max-w-sm p-5 shadow-2xl relative space-y-4 border border-indigo-500/40">
+      <div class="flex items-center justify-between text-xs text-indigo-500 bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/20">
+        <span class="flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-bell"></i>
+          11:00 PM Daily Budget Alert
+        </span>
+        <button onclick="closeNotifModal()" class="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="text-center py-2 space-y-1">
+        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">Today's Expenditure</div>
+        <div id="notifSpent" class="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">₹0</div>
+        <div id="notifMsg" class="text-xs font-bold text-emerald-500 mt-1">🎉 You stayed within budget today!</div>
+      </div>
+
+      <div class="space-y-2 p-3.5 rounded-xl theme-input text-xs">
+        <div class="flex justify-between text-slate-500 dark:text-slate-400">
+          <span>Daily Target:</span>
+          <span id="notifTarget" class="font-mono text-slate-900 dark:text-white font-bold">₹0</span>
+        </div>
+        <div class="flex justify-between text-slate-500 dark:text-slate-400">
+          <span>Tomorrow's New Target:</span>
+          <span id="notifNextTarget" class="font-mono text-blue-500 font-bold">₹0</span>
+        </div>
+      </div>
+
+      <button onclick="closeNotifModal()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md">
+        Close Notification
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript Script Tag -->
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+body {
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Modern Responsive Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* Light Mode Custom Styling */
+html:not(.dark) body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html:not(.dark) .theme-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .theme-input {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+html:not(.dark) .theme-input:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+}
+
+/* Dark Mode Custom Styling */
+html.dark body {
+  background-color: #090d16;
+  color: #f8fafc;
+}
+
+html.dark .theme-card {
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .theme-input {
+  background-color: #030712;
+  border: 1px solid #374151;
+  color: #f8fafc;
+}
+html.dark .theme-input:focus {
+  border-color: #60a5fa;
+}
+
+/* Tab active indicator styling */
+.nav-tab.active {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+}
